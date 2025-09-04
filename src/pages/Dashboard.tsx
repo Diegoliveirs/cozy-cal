@@ -1,24 +1,24 @@
 import { useState } from "react";
 import { Hotel, TrendingUp } from "lucide-react";
-import { Calendar } from "@/components/Calendar";
+import { Calendario } from "@/components/Calendar";
 import { BottomNav } from "@/components/BottomNav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useReservations } from "@/contexts/ReservationContext";
+import { usarReservas } from "@/contexts/ReservationContext";
 
 const Dashboard = () => {
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const { reservations } = useReservations();
+  const [dataSelecionada, setDataSelecionada] = useState(new Date());
+  const { reservas } = usarReservas();
 
-  const today = new Date();
-  const currentMonthReservations = reservations.filter(reservation => {
-    const checkIn = new Date(reservation.checkIn);
-    return checkIn.getMonth() === today.getMonth() && checkIn.getFullYear() === today.getFullYear();
+  const hoje = new Date();
+  const reservasMesAtual = reservas.filter(reserva => {
+    const dataEntrada = new Date(reserva.dataEntrada);
+    return dataEntrada.getMonth() === hoje.getMonth() && dataEntrada.getFullYear() === hoje.getFullYear();
   });
 
-  const confirmedReservations = currentMonthReservations.filter(r => r.status === 'confirmed');
-  const totalRevenue = confirmedReservations.reduce((sum, r) => {
-    const nights = Math.ceil((new Date(r.checkOut).getTime() - new Date(r.checkIn).getTime()) / (1000 * 60 * 60 * 24));
-    return sum + (r.dailyRate * nights);
+  const reservasConfirmadas = reservasMesAtual.filter(r => r.status === 'confirmada');
+  const receitaTotal = reservasConfirmadas.reduce((soma, r) => {
+    const noites = Math.ceil((new Date(r.dataSaida).getTime() - new Date(r.dataEntrada).getTime()) / (1000 * 60 * 60 * 24));
+    return soma + (r.valorDiaria * noites);
   }, 0);
 
   return (
@@ -43,7 +43,7 @@ const Dashboard = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs opacity-80">Este Mês</p>
-                    <p className="text-lg font-bold">{currentMonthReservations.length}</p>
+                    <p className="text-lg font-bold">{reservasMesAtual.length}</p>
                     <p className="text-xs opacity-80">Reservas</p>
                   </div>
                   <Hotel className="h-8 w-8 opacity-60" />
@@ -56,7 +56,7 @@ const Dashboard = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs opacity-80">Receita</p>
-                    <p className="text-lg font-bold">R$ {totalRevenue.toLocaleString('pt-BR')}</p>
+                    <p className="text-lg font-bold">R$ {receitaTotal.toLocaleString('pt-BR')}</p>
                     <p className="text-xs opacity-80">Este Mês</p>
                   </div>
                   <TrendingUp className="h-8 w-8 opacity-60" />
@@ -69,7 +69,7 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <main className="max-w-md mx-auto p-4">
-        <Calendar selectedDate={selectedDate} onDateSelect={setSelectedDate} />
+        <Calendario dataSelecionada={dataSelecionada} aoSelecionarData={setDataSelecionada} />
       </main>
 
       <BottomNav />

@@ -18,80 +18,80 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useReservations, type Reservation } from "@/contexts/ReservationContext";
+import { usarReservas, type Reserva } from "@/contexts/ReservationContext";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
-interface EditReservationModalProps {
-  reservation: Reservation;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onClose: () => void;
+interface PropsModalEditarReserva {
+  reserva: Reserva;
+  aberto: boolean;
+  aoMudarAberto: (aberto: boolean) => void;
+  aoFechar: () => void;
 }
 
-export const EditReservationModal = ({ 
-  reservation, 
-  open, 
-  onOpenChange, 
-  onClose 
-}: EditReservationModalProps) => {
-  const { updateReservation } = useReservations();
-  const [isLoading, setIsLoading] = useState(false);
+export const ModalEditarReserva = ({ 
+  reserva, 
+  aberto, 
+  aoMudarAberto, 
+  aoFechar 
+}: PropsModalEditarReserva) => {
+  const { atualizarReserva } = usarReservas();
+  const [estaCarregando, setEstaCarregando] = useState(false);
   
-  const [formData, setFormData] = useState({
-    guestName: reservation.guestName,
-    phone: reservation.phone,
-    checkIn: format(reservation.checkIn, "yyyy-MM-dd"),
-    checkOut: format(reservation.checkOut, "yyyy-MM-dd"),
-    dailyRate: reservation.dailyRate.toString(),
-    observations: reservation.observations || "",
-    status: reservation.status,
+  const [dadosFormulario, setDadosFormulario] = useState({
+    nomeHospede: reserva.nomeHospede,
+    telefone: reserva.telefone,
+    dataEntrada: format(reserva.dataEntrada, "yyyy-MM-dd"),
+    dataSaida: format(reserva.dataSaida, "yyyy-MM-dd"),
+    valorDiaria: reserva.valorDiaria.toString(),
+    observacoes: reserva.observacoes || "",
+    status: reserva.status,
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const lidarComSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setEstaCarregando(true);
 
-    if (!formData.guestName || !formData.phone || !formData.dailyRate) {
+    if (!dadosFormulario.nomeHospede || !dadosFormulario.telefone || !dadosFormulario.valorDiaria) {
       toast({
         title: "Erro",
         description: "Por favor, preencha todos os campos obrigatórios.",
         variant: "destructive",
       });
-      setIsLoading(false);
+      setEstaCarregando(false);
       return;
     }
 
-    const checkInDate = new Date(formData.checkIn);
-    const checkOutDate = new Date(formData.checkOut);
+    const dataEntrada = new Date(dadosFormulario.dataEntrada);
+    const dataSaida = new Date(dadosFormulario.dataSaida);
 
-    if (checkOutDate <= checkInDate) {
+    if (dataSaida <= dataEntrada) {
       toast({
         title: "Erro",
         description: "A data de saída deve ser posterior à data de entrada.",
         variant: "destructive",
       });
-      setIsLoading(false);
+      setEstaCarregando(false);
       return;
     }
 
     try {
-      updateReservation(reservation.id, {
-        guestName: formData.guestName,
-        phone: formData.phone,
-        checkIn: checkInDate,
-        checkOut: checkOutDate,
-        dailyRate: parseFloat(formData.dailyRate),
-        observations: formData.observations,
-        status: formData.status as Reservation['status'],
+      atualizarReserva(reserva.id, {
+        nomeHospede: dadosFormulario.nomeHospede,
+        telefone: dadosFormulario.telefone,
+        dataEntrada: dataEntrada,
+        dataSaida: dataSaida,
+        valorDiaria: parseFloat(dadosFormulario.valorDiaria),
+        observacoes: dadosFormulario.observacoes,
+        status: dadosFormulario.status as Reserva['status'],
       });
 
       toast({
         title: "Reserva atualizada com sucesso!",
-        description: `Reserva de ${formData.guestName} foi atualizada.`,
+        description: `Reserva de ${dadosFormulario.nomeHospede} foi atualizada.`,
       });
 
-      onClose();
+      aoFechar();
     } catch (error) {
       toast({
         title: "Erro",
@@ -99,16 +99,16 @@ export const EditReservationModal = ({
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setEstaCarregando(false);
     }
   };
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const lidarComMudancaInput = (campo: string, valor: string) => {
+    setDadosFormulario(anterior => ({ ...anterior, [campo]: valor }));
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={aberto} onOpenChange={aoMudarAberto}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -116,110 +116,110 @@ export const EditReservationModal = ({
             Editar Reserva
           </DialogTitle>
           <DialogDescription>
-            Atualize as informações da reserva de {reservation.guestName}
+            Atualize as informações da reserva de {reserva.nomeHospede}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={lidarComSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="edit-guestName" className="flex items-center gap-2">
+            <Label htmlFor="edit-nomeHospede" className="flex items-center gap-2">
               <User className="h-4 w-4" />
               Nome do Hóspede *
             </Label>
             <Input
-              id="edit-guestName"
+              id="edit-nomeHospede"
               placeholder="Digite o nome completo"
-              value={formData.guestName}
-              onChange={(e) => handleInputChange("guestName", e.target.value)}
+              value={dadosFormulario.nomeHospede}
+              onChange={(e) => lidarComMudancaInput("nomeHospede", e.target.value)}
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="edit-phone" className="flex items-center gap-2">
+            <Label htmlFor="edit-telefone" className="flex items-center gap-2">
               <Phone className="h-4 w-4" />
               Telefone *
             </Label>
             <Input
-              id="edit-phone"
+              id="edit-telefone"
               type="tel"
               placeholder="+55 11 99999-9999"
-              value={formData.phone}
-              onChange={(e) => handleInputChange("phone", e.target.value)}
+              value={dadosFormulario.telefone}
+              onChange={(e) => lidarComMudancaInput("telefone", e.target.value)}
               required
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-checkIn" className="flex items-center gap-2">
+              <Label htmlFor="edit-dataEntrada" className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
                 Data de Entrada
               </Label>
               <Input
-                id="edit-checkIn"
+                id="edit-dataEntrada"
                 type="date"
-                value={formData.checkIn}
-                onChange={(e) => handleInputChange("checkIn", e.target.value)}
+                value={dadosFormulario.dataEntrada}
+                onChange={(e) => lidarComMudancaInput("dataEntrada", e.target.value)}
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-checkOut" className="flex items-center gap-2">
+              <Label htmlFor="edit-dataSaida" className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
                 Data de Saída
               </Label>
               <Input
-                id="edit-checkOut"
+                id="edit-dataSaida"
                 type="date"
-                value={formData.checkOut}
-                onChange={(e) => handleInputChange("checkOut", e.target.value)}
+                value={dadosFormulario.dataSaida}
+                onChange={(e) => lidarComMudancaInput("dataSaida", e.target.value)}
                 required
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="edit-dailyRate" className="flex items-center gap-2">
+            <Label htmlFor="edit-valorDiaria" className="flex items-center gap-2">
               <DollarSign className="h-4 w-4" />
               Valor da Diária (R$) *
             </Label>
             <Input
-              id="edit-dailyRate"
+              id="edit-valorDiaria"
               type="number"
               step="0.01"
               placeholder="250.00"
-              value={formData.dailyRate}
-              onChange={(e) => handleInputChange("dailyRate", e.target.value)}
+              value={dadosFormulario.valorDiaria}
+              onChange={(e) => lidarComMudancaInput("valorDiaria", e.target.value)}
               required
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="edit-status">Status da Reserva</Label>
-            <Select value={formData.status} onValueChange={(value) => handleInputChange("status", value)}>
+            <Select value={dadosFormulario.status} onValueChange={(valor) => lidarComMudancaInput("status", valor)}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="confirmed">Confirmada</SelectItem>
-                <SelectItem value="pending">Pendente</SelectItem>
-                <SelectItem value="cancelled">Cancelada</SelectItem>
+                <SelectItem value="confirmada">Confirmada</SelectItem>
+                <SelectItem value="pendente">Pendente</SelectItem>
+                <SelectItem value="cancelada">Cancelada</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="edit-observations" className="flex items-center gap-2">
+            <Label htmlFor="edit-observacoes" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               Observações (Opcional)
             </Label>
             <Textarea
-              id="edit-observations"
+              id="edit-observacoes"
               placeholder="Observações especiais, preferências do hóspede..."
-              value={formData.observations}
-              onChange={(e) => handleInputChange("observations", e.target.value)}
+              value={dadosFormulario.observacoes}
+              onChange={(e) => lidarComMudancaInput("observacoes", e.target.value)}
               rows={3}
             />
           </div>
@@ -228,17 +228,17 @@ export const EditReservationModal = ({
             <Button
               type="button"
               variant="outline"
-              onClick={onClose}
+              onClick={aoFechar}
               className="flex-1"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
-              disabled={isLoading}
+              disabled={estaCarregando}
               className="flex-1 bg-gradient-primary shadow-soft hover:shadow-hover transition-all"
             >
-              {isLoading ? "Salvando..." : "Atualizar Reserva"}
+              {estaCarregando ? "Salvando..." : "Atualizar Reserva"}
             </Button>
           </div>
         </form>

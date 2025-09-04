@@ -20,108 +20,108 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useReservations } from "@/contexts/ReservationContext";
-import { EditReservationModal } from "./EditReservationModal";
+import { usarReservas } from "@/contexts/ReservationContext";
+import { ModalEditarReserva } from "./EditReservationModal";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-interface ReservationModalProps {
-  date: Date;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+interface PropsModalReserva {
+  data: Date;
+  aberto: boolean;
+  aoMudarAberto: (aberto: boolean) => void;
 }
 
-export const ReservationModal = ({ date, open, onOpenChange }: ReservationModalProps) => {
-  const { getReservationsForDate, deleteReservation } = useReservations();
-  const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
+export const ModalReserva = ({ data, aberto, aoMudarAberto }: PropsModalReserva) => {
+  const { obterReservasParaData, excluirReserva } = usarReservas();
+  const [idReservaSelecionada, setIdReservaSelecionada] = useState<string | null>(null);
+  const [mostrarDialogoExcluir, setMostrarDialogoExcluir] = useState(false);
+  const [mostrarModalEditar, setMostrarModalEditar] = useState(false);
 
-  const reservations = getReservationsForDate(date);
+  const reservas = obterReservasParaData(data);
 
-  const handleEdit = (reservationId: string) => {
-    setSelectedReservationId(reservationId);
-    setShowEditModal(true);
+  const lidarComEditar = (idReserva: string) => {
+    setIdReservaSelecionada(idReserva);
+    setMostrarModalEditar(true);
   };
 
-  const handleDelete = (reservationId: string) => {
-    setSelectedReservationId(reservationId);
-    setShowDeleteDialog(true);
+  const lidarComExcluir = (idReserva: string) => {
+    setIdReservaSelecionada(idReserva);
+    setMostrarDialogoExcluir(true);
   };
 
-  const confirmDelete = () => {
-    if (selectedReservationId) {
-      deleteReservation(selectedReservationId);
+  const confirmarExclusao = () => {
+    if (idReservaSelecionada) {
+      excluirReserva(idReservaSelecionada);
       toast({
         title: "Reserva cancelada",
         description: "A reserva foi removida com sucesso.",
       });
-      setShowDeleteDialog(false);
-      setSelectedReservationId(null);
-      onOpenChange(false);
+      setMostrarDialogoExcluir(false);
+      setIdReservaSelecionada(null);
+      aoMudarAberto(false);
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const obterBadgeStatus = (status: string) => {
     switch (status) {
-      case 'confirmed':
+      case 'confirmada':
         return <Badge className="bg-success text-success-foreground">Confirmada</Badge>;
-      case 'pending':
+      case 'pendente':
         return <Badge className="bg-warning text-warning-foreground">Pendente</Badge>;
-      case 'cancelled':
+      case 'cancelada':
         return <Badge variant="destructive">Cancelada</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
   };
 
-  const selectedReservation = reservations.find(r => r.id === selectedReservationId);
+  const reservaSelecionada = reservas.find(r => r.id === idReservaSelecionada);
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog open={aberto} onOpenChange={aoMudarAberto}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-primary" />
-              Reservas para {format(date, "dd 'de' MMMM", { locale: ptBR })}
+              Reservas para {format(data, "dd 'de' MMMM", { locale: ptBR })}
             </DialogTitle>
             <DialogDescription>
-              {reservations.length} reserva(s) encontrada(s) para esta data
+              {reservas.length} reserva(s) encontrada(s) para esta data
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-3 max-h-96 overflow-y-auto">
-            {reservations.map((reservation) => (
-              <Card key={reservation.id} className="shadow-soft">
+            {reservas.map((reserva) => (
+              <Card key={reserva.id} className="shadow-soft">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4 text-primary" />
-                      <h3 className="font-semibold">{reservation.guestName}</h3>
+                      <h3 className="font-semibold">{reserva.nomeHospede}</h3>
                     </div>
-                    {getStatusBadge(reservation.status)}
+                    {obterBadgeStatus(reserva.status)}
                   </div>
 
                   <div className="space-y-2 text-sm text-muted-foreground mb-4">
                     <div className="flex items-center gap-2">
                       <Phone className="h-4 w-4" />
-                      <span>{reservation.phone}</span>
+                      <span>{reserva.telefone}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
                       <span>
-                        {format(reservation.checkIn, "dd/MM")} - {format(reservation.checkOut, "dd/MM")}
+                        {format(reserva.dataEntrada, "dd/MM")} - {format(reserva.dataSaida, "dd/MM")}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <DollarSign className="h-4 w-4" />
-                      <span>R$ {reservation.dailyRate.toFixed(2)}/dia</span>
+                      <span>R$ {reserva.valorDiaria.toFixed(2)}/dia</span>
                     </div>
-                    {reservation.observations && (
+                    {reserva.observacoes && (
                       <div className="mt-2 text-xs bg-muted p-2 rounded">
-                        <strong>Observações:</strong> {reservation.observations}
+                        <strong>Observações:</strong> {reserva.observacoes}
                       </div>
                     )}
                   </div>
@@ -130,7 +130,7 @@ export const ReservationModal = ({ date, open, onOpenChange }: ReservationModalP
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleEdit(reservation.id)}
+                      onClick={() => lidarComEditar(reserva.id)}
                       className="flex-1 hover:shadow-soft transition-all"
                     >
                       <Edit2 className="h-4 w-4 mr-1" />
@@ -139,7 +139,7 @@ export const ReservationModal = ({ date, open, onOpenChange }: ReservationModalP
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => handleDelete(reservation.id)}
+                      onClick={() => lidarComExcluir(reserva.id)}
                       className="flex-1"
                     >
                       <Trash2 className="h-4 w-4 mr-1" />
@@ -154,18 +154,18 @@ export const ReservationModal = ({ date, open, onOpenChange }: ReservationModalP
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <AlertDialog open={mostrarDialogoExcluir} onOpenChange={setMostrarDialogoExcluir}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar Cancelamento</AlertDialogTitle>
             <AlertDialogDescription>
               Tem certeza que deseja cancelar a reserva de{" "}
-              <strong>{selectedReservation?.guestName}</strong>? Esta ação não pode ser desfeita.
+              <strong>{reservaSelecionada?.nomeHospede}</strong>? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground">
+            <AlertDialogAction onClick={confirmarExclusao} className="bg-destructive text-destructive-foreground">
               Confirmar Cancelamento
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -173,14 +173,14 @@ export const ReservationModal = ({ date, open, onOpenChange }: ReservationModalP
       </AlertDialog>
 
       {/* Edit Modal */}
-      {showEditModal && selectedReservation && (
-        <EditReservationModal
-          reservation={selectedReservation}
-          open={showEditModal}
-          onOpenChange={setShowEditModal}
-          onClose={() => {
-            setShowEditModal(false);
-            setSelectedReservationId(null);
+      {mostrarModalEditar && reservaSelecionada && (
+        <ModalEditarReserva
+          reserva={reservaSelecionada}
+          aberto={mostrarModalEditar}
+          aoMudarAberto={setMostrarModalEditar}
+          aoFechar={() => {
+            setMostrarModalEditar(false);
+            setIdReservaSelecionada(null);
           }}
         />
       )}

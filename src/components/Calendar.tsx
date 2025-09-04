@@ -3,93 +3,93 @@ import { ChevronLeft, ChevronRight, Plus, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { useReservations } from "@/contexts/ReservationContext";
-import { ReservationModal } from "./ReservationModal";
-import { NewReservationModal } from "./NewReservationModal";
+import { usarReservas } from "@/contexts/ReservationContext";
+import { ModalReserva } from "./ReservationModal";
+import { ModalNovaReserva } from "./NewReservationModal";
 
-interface CalendarProps {
-  selectedDate: Date;
-  onDateSelect: (date: Date) => void;
+interface PropsCalendario {
+  dataSelecionada: Date;
+  aoSelecionarData: (data: Date) => void;
 }
 
-export const Calendar = ({ selectedDate, onDateSelect }: CalendarProps) => {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [showReservationModal, setShowReservationModal] = useState(false);
-  const [showNewReservationModal, setShowNewReservationModal] = useState(false);
-  const { reservations, getReservationsForDate } = useReservations();
+export const Calendario = ({ dataSelecionada, aoSelecionarData }: PropsCalendario) => {
+  const [mesAtual, setMesAtual] = useState(new Date());
+  const [mostrarModalReserva, setMostrarModalReserva] = useState(false);
+  const [mostrarModalNovaReserva, setMostrarModalNovaReserva] = useState(false);
+  const { reservas, obterReservasParaData } = usarReservas();
 
-  const months = [
+  const meses = [
     "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
     "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
   ];
 
-  const weekdays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-  const getDaysInMonth = (date: Date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
+  const obterDiasDoMes = (data: Date) => {
+    const ano = data.getFullYear();
+    const mes = data.getMonth();
+    const primeiroDia = new Date(ano, mes, 1);
+    const ultimoDia = new Date(ano, mes + 1, 0);
+    const diasNoMes = ultimoDia.getDate();
+    const diaInicialDaSemana = primeiroDia.getDay();
 
-    const days = [];
+    const dias = [];
 
-    // Previous month's days
-    for (let i = startingDayOfWeek - 1; i >= 0; i--) {
-      const prevDate = new Date(year, month, -i);
-      days.push({ date: prevDate, isCurrentMonth: false });
+    // Dias do mês anterior
+    for (let i = diaInicialDaSemana - 1; i >= 0; i--) {
+      const dataAnterior = new Date(ano, mes, -i);
+      dias.push({ data: dataAnterior, eMesAtual: false });
     }
 
-    // Current month's days
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(year, month, day);
-      days.push({ date, isCurrentMonth: true });
+    // Dias do mês atual
+    for (let dia = 1; dia <= diasNoMes; dia++) {
+      const data = new Date(ano, mes, dia);
+      dias.push({ data, eMesAtual: true });
     }
 
-    // Next month's days to fill the grid
-    const remainingDays = 42 - days.length;
-    for (let day = 1; day <= remainingDays; day++) {
-      const nextDate = new Date(year, month + 1, day);
-      days.push({ date: nextDate, isCurrentMonth: false });
+    // Dias do próximo mês para preencher a grade
+    const diasRestantes = 42 - dias.length;
+    for (let dia = 1; dia <= diasRestantes; dia++) {
+      const proximaData = new Date(ano, mes + 1, dia);
+      dias.push({ data: proximaData, eMesAtual: false });
     }
 
-    return days;
+    return dias;
   };
 
-  const navigateMonth = (direction: 'prev' | 'next') => {
-    setCurrentMonth(prev => {
-      const newMonth = new Date(prev);
-      if (direction === 'prev') {
-        newMonth.setMonth(prev.getMonth() - 1);
+  const navegarMes = (direcao: 'anterior' | 'proximo') => {
+    setMesAtual(anterior => {
+      const novoMes = new Date(anterior);
+      if (direcao === 'anterior') {
+        novoMes.setMonth(anterior.getMonth() - 1);
       } else {
-        newMonth.setMonth(prev.getMonth() + 1);
+        novoMes.setMonth(anterior.getMonth() + 1);
       }
-      return newMonth;
+      return novoMes;
     });
   };
 
-  const handleDateClick = (date: Date) => {
-    onDateSelect(date);
-    const reservationsForDate = getReservationsForDate(date);
+  const lidarComCliqueData = (data: Date) => {
+    aoSelecionarData(data);
+    const reservasParaData = obterReservasParaData(data);
     
-    if (reservationsForDate.length > 0) {
-      setShowReservationModal(true);
+    if (reservasParaData.length > 0) {
+      setMostrarModalReserva(true);
     } else {
-      setShowNewReservationModal(true);
+      setMostrarModalNovaReserva(true);
     }
   };
 
-  const isToday = (date: Date) => {
-    const today = new Date();
-    return date.toDateString() === today.toDateString();
+  const eHoje = (data: Date) => {
+    const hoje = new Date();
+    return data.toDateString() === hoje.toDateString();
   };
 
-  const isSameDay = (date1: Date, date2: Date) => {
-    return date1.toDateString() === date2.toDateString();
+  const eMesmoDia = (data1: Date, data2: Date) => {
+    return data1.toDateString() === data2.toDateString();
   };
 
-  const days = getDaysInMonth(currentMonth);
+  const dias = obterDiasDoMes(mesAtual);
 
   return (
     <>
@@ -97,13 +97,13 @@ export const Calendar = ({ selectedDate, onDateSelect }: CalendarProps) => {
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-xl font-semibold">
-              {months[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+              {meses[mesAtual.getMonth()]} {mesAtual.getFullYear()}
             </CardTitle>
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => navigateMonth('prev')}
+                onClick={() => navegarMes('anterior')}
                 className="hover:shadow-soft transition-all"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -111,7 +111,7 @@ export const Calendar = ({ selectedDate, onDateSelect }: CalendarProps) => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => navigateMonth('next')}
+                onClick={() => navegarMes('proximo')}
                 className="hover:shadow-soft transition-all"
               >
                 <ChevronRight className="h-4 w-4" />
@@ -121,40 +121,40 @@ export const Calendar = ({ selectedDate, onDateSelect }: CalendarProps) => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-7 gap-1 mb-2">
-            {weekdays.map((day) => (
-              <div key={day} className="p-2 text-center text-sm font-medium text-muted-foreground">
-                {day}
+            {diasSemana.map((dia) => (
+              <div key={dia} className="p-2 text-center text-sm font-medium text-muted-foreground">
+                {dia}
               </div>
             ))}
           </div>
           <div className="grid grid-cols-7 gap-1">
-            {days.map(({ date, isCurrentMonth }, index) => {
-              const reservationsForDate = getReservationsForDate(date);
-              const hasReservations = reservationsForDate.length > 0;
-              const isSelected = isSameDay(date, selectedDate);
+            {dias.map(({ data, eMesAtual }, indice) => {
+              const reservasParaData = obterReservasParaData(data);
+              const temReservas = reservasParaData.length > 0;
+              const estaSelecionado = eMesmoDia(data, dataSelecionada);
               
               return (
                 <Button
-                  key={index}
+                  key={indice}
                   variant="ghost"
                   className={cn(
                     "h-12 p-1 text-sm transition-all duration-200 relative",
-                    !isCurrentMonth && "text-muted-foreground opacity-50",
-                    isToday(date) && "bg-primary/10 text-primary font-semibold",
-                    isSelected && "bg-accent text-accent-foreground",
-                    hasReservations && isCurrentMonth && "bg-success-light text-success-foreground",
+                    !eMesAtual && "text-muted-foreground opacity-50",
+                    eHoje(data) && "bg-primary/10 text-primary font-semibold",
+                    estaSelecionado && "bg-accent text-accent-foreground",
+                    temReservas && eMesAtual && "bg-success-light text-success-foreground",
                     "hover:shadow-soft hover:scale-105"
                   )}
-                  onClick={() => handleDateClick(date)}
+                  onClick={() => lidarComCliqueData(data)}
                 >
                   <div className="flex flex-col items-center justify-center w-full h-full">
-                    <span>{date.getDate()}</span>
-                    {hasReservations && (
+                    <span>{data.getDate()}</span>
+                    {temReservas && (
                       <div className="flex items-center gap-1 mt-1">
                         <CheckCircle className="h-3 w-3" />
-                        {reservationsForDate.length > 1 && (
+                        {reservasParaData.length > 1 && (
                           <span className="text-xs font-bold">
-                            {reservationsForDate.length}
+                            {reservasParaData.length}
                           </span>
                         )}
                       </div>
@@ -167,19 +167,20 @@ export const Calendar = ({ selectedDate, onDateSelect }: CalendarProps) => {
         </CardContent>
       </Card>
 
-      {showReservationModal && (
-        <ReservationModal
-          date={selectedDate}
-          open={showReservationModal}
-          onOpenChange={setShowReservationModal}
+      {/* Modais */}
+      {mostrarModalReserva && (
+        <ModalReserva
+          data={dataSelecionada}
+          aberto={mostrarModalReserva}
+          aoMudarAberto={setMostrarModalReserva}
         />
       )}
-
-      {showNewReservationModal && (
-        <NewReservationModal
-          date={selectedDate}
-          open={showNewReservationModal}
-          onOpenChange={setShowNewReservationModal}
+      
+      {mostrarModalNovaReserva && (
+        <ModalNovaReserva
+          data={dataSelecionada}
+          aberto={mostrarModalNovaReserva}
+          aoMudarAberto={setMostrarModalNovaReserva}
         />
       )}
     </>

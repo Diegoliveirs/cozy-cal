@@ -1,105 +1,105 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
-export interface Reservation {
+export interface Reserva {
   id: string;
-  guestName: string;
-  phone: string;
-  checkIn: Date;
-  checkOut: Date;
-  dailyRate: number;
-  observations?: string;
-  status: 'confirmed' | 'pending' | 'cancelled';
+  nomeHospede: string;
+  telefone: string;
+  dataEntrada: Date;
+  dataSaida: Date;
+  valorDiaria: number;
+  observacoes?: string;
+  status: 'confirmada' | 'pendente' | 'cancelada';
 }
 
-interface ReservationContextType {
-  reservations: Reservation[];
-  addReservation: (reservation: Omit<Reservation, 'id'>) => void;
-  updateReservation: (id: string, reservation: Partial<Reservation>) => void;
-  deleteReservation: (id: string) => void;
-  getReservationsForDate: (date: Date) => Reservation[];
+interface TipoContextoReserva {
+  reservas: Reserva[];
+  adicionarReserva: (reserva: Omit<Reserva, 'id'>) => void;
+  atualizarReserva: (id: string, reserva: Partial<Reserva>) => void;
+  excluirReserva: (id: string) => void;
+  obterReservasParaData: (data: Date) => Reserva[];
 }
 
-const ReservationContext = createContext<ReservationContextType | undefined>(undefined);
+const ContextoReserva = createContext<TipoContextoReserva | undefined>(undefined);
 
-export const ReservationProvider = ({ children }: { children: ReactNode }) => {
-  const [reservations, setReservations] = useState<Reservation[]>([
-    // Demo data
+export const ProvedorReserva = ({ children }: { children: ReactNode }) => {
+  const [reservas, setReservas] = useState<Reserva[]>([
+    // Dados demo
     {
       id: "1",
-      guestName: "Maria Silva",
-      phone: "+55 11 99999-9999",
-      checkIn: new Date(2024, 0, 15),
-      checkOut: new Date(2024, 0, 18),
-      dailyRate: 250,
-      observations: "Cliente preferencial, quarto com vista para o mar",
-      status: 'confirmed'
+      nomeHospede: "Maria Silva",
+      telefone: "+55 11 99999-9999",
+      dataEntrada: new Date(2024, 0, 15),
+      dataSaida: new Date(2024, 0, 18),
+      valorDiaria: 250,
+      observacoes: "Cliente preferencial, quarto com vista para o mar",
+      status: 'confirmada'
     },
     {
       id: "2",
-      guestName: "João Santos",
-      phone: "+55 11 88888-8888",
-      checkIn: new Date(2024, 0, 20),
-      checkOut: new Date(2024, 0, 22),
-      dailyRate: 180,
-      observations: "",
-      status: 'pending'
+      nomeHospede: "João Santos",
+      telefone: "+55 11 88888-8888",
+      dataEntrada: new Date(2024, 0, 20),
+      dataSaida: new Date(2024, 0, 22),
+      valorDiaria: 180,
+      observacoes: "",
+      status: 'pendente'
     }
   ]);
 
-  const generateId = () => Math.random().toString(36).substr(2, 9);
+  const gerarId = () => Math.random().toString(36).substr(2, 9);
 
-  const addReservation = (reservation: Omit<Reservation, 'id'>) => {
-    const newReservation = {
-      ...reservation,
-      id: generateId(),
+  const adicionarReserva = (reserva: Omit<Reserva, 'id'>) => {
+    const novaReserva = {
+      ...reserva,
+      id: gerarId(),
     };
-    setReservations(prev => [...prev, newReservation]);
+    setReservas(anterior => [...anterior, novaReserva]);
   };
 
-  const updateReservation = (id: string, updatedReservation: Partial<Reservation>) => {
-    setReservations(prev =>
-      prev.map(reservation =>
-        reservation.id === id ? { ...reservation, ...updatedReservation } : reservation
+  const atualizarReserva = (id: string, reservaAtualizada: Partial<Reserva>) => {
+    setReservas(anterior =>
+      anterior.map(reserva =>
+        reserva.id === id ? { ...reserva, ...reservaAtualizada } : reserva
       )
     );
   };
 
-  const deleteReservation = (id: string) => {
-    setReservations(prev => prev.filter(reservation => reservation.id !== id));
+  const excluirReserva = (id: string) => {
+    setReservas(anterior => anterior.filter(reserva => reserva.id !== id));
   };
 
-  const getReservationsForDate = (date: Date) => {
-    return reservations.filter(reservation => {
-      const checkIn = new Date(reservation.checkIn);
-      const checkOut = new Date(reservation.checkOut);
+  const obterReservasParaData = (data: Date) => {
+    return reservas.filter(reserva => {
+      const dataEntrada = new Date(reserva.dataEntrada);
+      const dataSaida = new Date(reserva.dataSaida);
       
-      checkIn.setHours(0, 0, 0, 0);
-      checkOut.setHours(0, 0, 0, 0);
-      date.setHours(0, 0, 0, 0);
+      dataEntrada.setHours(0, 0, 0, 0);
+      dataSaida.setHours(0, 0, 0, 0);
+      data.setHours(0, 0, 0, 0);
       
-      return date >= checkIn && date < checkOut;
+      return data >= dataEntrada && data < dataSaida;
     });
   };
 
   return (
-    <ReservationContext.Provider
+    <ContextoReserva.Provider
       value={{
-        reservations,
-        addReservation,
-        updateReservation,
-        deleteReservation,
-        getReservationsForDate,
+        reservas,
+        adicionarReserva,
+        atualizarReserva,
+        excluirReserva,
+        obterReservasParaData,
       }}
     >
       {children}
-    </ReservationContext.Provider>
+    </ContextoReserva.Provider>
   );
 };
 
-export const useReservations = () => {
-  const context = useContext(ReservationContext);
-  if (context === undefined) {
-    throw new Error('useReservations must be used within a ReservationProvider');
+export const usarReservas = () => {
+  const contexto = useContext(ContextoReserva);
+  if (contexto === undefined) {
+    throw new Error('usarReservas deve ser usado dentro de um ProvedorReserva');
   }
-  return context;
+  return contexto;
 };
