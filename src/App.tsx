@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ProvedorReserva } from "@/contexts/ReservationContext";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
-import Reservations from "./pages/Reservations";
+import Reservas from "./pages/Reservations";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
